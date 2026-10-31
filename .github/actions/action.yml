@@ -1,0 +1,44 @@
+name: 'Setup'
+description: 'Setup environment with Java and Node'
+inputs:
+  java-version:
+    description: 'Java version to use'
+    required: true
+    default: '25'
+  node-version:
+    description: 'Node version to use'
+    required: true
+    default: '24.15.0'
+  node-package-manager:
+    description: 'Package manager to use for installing node dependencies'
+    required: true
+    default: 'npm'
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Setup: pnpm'
+      if: ${{inputs.node-package-manager == 'pnpm'}}
+      uses: pnpm/action-setup@v6
+      with:
+        version: 12
+    - name: 'Setup: Node.js'
+      uses: actions/setup-node@v7
+      with:
+        node-version: '${{inputs.node-version}}'
+        check-latest: true
+    - name: 'Setup: update NPM'
+      if: ${{inputs.node-package-manager == 'npm'}}
+      shell: bash
+      run: npm install -g npm
+    - name: 'Setup: Java ${{inputs.java-version}}'
+      uses: actions/setup-java@v6
+      with:
+        distribution: 'temurin'
+        java-version: '${{inputs.java-version}}'
+        check-latest: true
+    - name: 'Setup: check tools'
+      shell: bash
+      run: |
+        node -v
+        npm -v
+        java -version

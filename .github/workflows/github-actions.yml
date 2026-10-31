@@ -13,6 +13,52 @@ jobs:
   #------------------------------------------------------
   # Setup values which is going to be used in other jobs
   #------------------------------------------------------
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    outputs:
+      maven_cache_week: ${{steps.maven-cache-week.outputs.week}}
+      maven_cache_previous_week: ${{steps.maven-cache-week.outputs.previous_week}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Get the head commit message
+        id: commit-message
+        run: |
+          head_commit_message=$(git log -1 --no-merges --pretty=%B | tr '\n' ' ' | sed "s/'/'\\\\''/g")
+          echo head commit message: $head_commit_message
+          echo "message=$head_commit_message" >> $GITHUB_OUTPUT
+      - name: Prepare commit message and PR title
+        id: prepare-messages
+        env:
+          COMMIT_MESSAGE: ${{steps.commit-message.outputs.message}}
+          PR_TITLE: ${{github.event.pull_request.title}}
+        run: |
+          commit_message=$(echo "$COMMIT_MESSAGE" | tr -cd '[:alnum:][:space:]\[\]')
+          pr_title=$(echo "$PR_TITLE" | tr -cd '[:alnum:][:space:]\[\]')
+          echo "commit_message=$commit_message" >> $GITHUB_OUTPUT
+          echo "pr_title=$pr_title" >> $GITHUB_OUTPUT
+      - name: Compute Maven cache week
+        id: maven-cache-week
+        run: |
+          echo "week=$(date -u +%G-W%V)" >> $GITHUB_OUTPUT
+          echo "previous_week=$(date -u -d '7 days ago' +%G-W%V)" >> $GITHUB_OUTPUT
+  #--------------------------------------------------
+  # Build and Tests the project on Windows
+  #--------------------------------------------------
+  tests-windows:
+    name: tests-windows
+    needs: [setup]
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v7
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
   #--------------------------------------------------
   # Build and Tests the project on Linux
   #--------------------------------------------------
