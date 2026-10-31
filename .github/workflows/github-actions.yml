@@ -5,10 +5,10 @@ concurrency:
 on:
   push:
     branches:
-      - main
+      - develop
   pull_request:
     branches:
-      - main
+      - develop
 jobs:
   #------------------------------------------------------
   # Setup values which is going to be used in other jobs
