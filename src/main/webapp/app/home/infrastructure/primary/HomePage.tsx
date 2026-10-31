@@ -1,0 +1,39 @@
+import './HomePage.css';
+
+import ReactLogo from '@assets/ReactLogo.png';
+import Seed4JLogo from '@assets/seed4j_logo-name.png';
+
+function HomePage() {
+  return (
+    <div>
+      <div id="app">
+        <img alt="React logo" src={ReactLogo} />
+        <br />
+        <img alt="Seed4J logo" width={200} height={200} src={Seed4JLogo} />
+        <h1>React + TypeScript + Vite</h1>
+        <p>
+          Recommended IDE setup:&nbsp;
+          <a href="https://code.visualstudio.com/" target="_blank" rel="noopener noreferrer">
+            VSCode
+          </a>
+        </p>
+
+        <p>
+          <a href="https://vite.dev/guide/features.html" target="_blank" rel="noopener noreferrer">
+            Vite Documentation
+          </a>
+          <span>&nbsp;|&nbsp;</span>
+          <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">
+            React Documentation
+          </a>
+        </p>
+
+        <p>
+          Edit&nbsp;<code>src/main/webapp/app/common/primary/app/App.tsx</code> to test hot module replacement.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default HomePage;

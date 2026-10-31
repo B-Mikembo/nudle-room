@@ -1,0 +1,12 @@
+logging:
+  level:
+    dev:
+      brice:
+        nuddleroom: INFO
+spring:
+  application:
+    name: nudleRoomApplication
+  jackson:
+    default-property-inclusion: non_absent
+server:
+  port: 8080

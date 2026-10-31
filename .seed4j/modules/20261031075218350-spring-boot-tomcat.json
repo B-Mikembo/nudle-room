@@ -1,0 +1,14 @@
+{
+  "module": "spring-boot-tomcat",
+  "date": "2026-10-31T07:52:18.350945Z",
+  "properties": {
+    "packageName": "dev.brice.nuddleroom",
+    "projectName": "Nudle Room Application",
+    "baseName": "nudleRoomApplication",
+    "nodePackageManager": "npm",
+    "serverPort": 8080,
+    "endOfLine": "lf",
+    "indentSize": 2,
+    "springConfigurationFormat": "yaml"
+  }
+}
