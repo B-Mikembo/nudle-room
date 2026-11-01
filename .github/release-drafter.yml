@@ -1,0 +1,53 @@
+template: |
+  ##  Release Notes
+
+  $CHANGES
+
+exclude-contributors:
+  - 'github-actions[bot]'
+change-template: '- $TITLE - [#$NUMBER]($URL) by @$AUTHOR'
+categories:
+  # Exclude PRs labelled only with 'area: dependencies' (minor/patch updates)
+  - type: pre-exclude
+    when:
+      labels: ['area: dependencies']
+      labels-mode: only
+  - title: ⭐️ Important fixes and improvements
+    labels:
+      - 'theme: important'
+  - title: 💎 Features
+    labels:
+      - 'area: features request :bulb:'
+  - title: 🔧 Enhancements
+    labels: 'area: enhancement :wrench:'
+  - title: 🔨 Refactoring
+    labels: 'area: refactoring'
+  - title: 🐞 Bug Fixes
+    labels:
+      - 'area: bug :bug:'
+  - title: 🚨 Breaking changes
+    labels:
+      - 'area: breaking change'
+  - title: 🖥️ Frontend
+    labels:
+      - 'client: react'
+  - title: 🍃 Spring Boot
+    labels:
+      - 'server: spring boot'
+  - title: 🔒 Security
+    labels:
+      - 'theme: security'
+  - title: 🪶 Maven
+    labels:
+      - 'theme: maven'
+  - title: 📝 Documentation
+    label: 'area: documentation :books:'
+  - title: 🗑️ Remove modules
+    label: 'area: remove'
+  - title: 💩 Invalid
+    labels:
+      - 'area: invalid'
+      - 'area: spam'
+  - title: 📦 Major dependency updates
+    when:
+      labels: ['area: major dependencies']
