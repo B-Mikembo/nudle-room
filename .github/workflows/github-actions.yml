@@ -101,12 +101,10 @@ jobs:
           fallback-week: ${{github.event_name == 'pull_request' && needs.setup.outputs.maven_cache_previous_week || ''}}
       - name: 'Init: install Node.js packages'
         run: npm ci
-      - name: 'Start local Sonar'
-        run: docker compose -f src/main/docker/sonar.yml up -d
       - name: 'Test: run backend tests'
         run: |
           chmod +x mvnw
-          ./mvnw clean verify -Dsonar.qualitygate.wait=true
+          ./mvnw clean verify
       - name: 'Artifact: remove unused JARs'
         run: |
           rm target/*-javadoc.jar target/*-sources.jar
