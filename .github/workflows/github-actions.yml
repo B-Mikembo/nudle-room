@@ -59,26 +59,121 @@ jobs:
       - name: 'Setup: environment'
         id: setup
         uses: ./.github/actions/setup
+      - name: 'Init: restore local Maven repository'
+        id: restore-maven-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{runner.os}}-maven-${{hashFiles('**/pom.xml')}}
+          restore-keys: |
+            ${{runner.os}}-maven-
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Test: run backend tests'
+        run: |
+          ./mvnw clean verify
+      - name: 'Save local Maven repository'
+        if: github.ref == 'refs/heads/main' && steps.restore-maven-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{steps.restore-maven-cache.outputs.cache-primary-key}}
   #--------------------------------------------------
   # Build and Tests the project on Linux
   #--------------------------------------------------
-  tests:
-    name: tests
+  tests-linux:
+    name: tests-linux
+    needs: [setup]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: 'Setup: checkout project'
-        uses: actions/checkout@v5
-      - name: 'Setup: Node.js'
-        uses: actions/setup-node@v5
+        uses: actions/checkout@v7
         with:
-          node-version: 24.22.1
-      - name: 'Setup: Java'
-        uses: actions/setup-java@v5
+          fetch-depth: 0
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: restore global Maven cache'
+        uses: ./.github/actions/maven-cache-restore
         with:
-          distribution: 'temurin'
-          java-version: 25
-          cache: maven
-      - name: 'Test: run tests'
+          week: ${{needs.setup.outputs.maven_cache_week}}
+          fallback-week: ${{github.event_name == 'pull_request' && needs.setup.outputs.maven_cache_previous_week || ''}}
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Start local Sonar'
+        run: docker compose -f src/main/docker/sonar.yml up -d
+      - name: 'Test: run backend tests'
         run: |
-          mvn --batch-mode -ntp clean verify
+          chmod +x mvnw
+          ./mvnw clean verify -Dsonar.qualitygate.wait=true
+      - name: 'Artifact: remove unused JARs'
+        run: |
+          rm target/*-javadoc.jar target/*-sources.jar
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v7
+        with:
+          name: nudle-room-jar
+          path: '${{github.workspace}}/target/*.jar'
+          retention-days: 1
+      - name: 'Maven cache: upload downloaded dependencies'
+        if: ${{!cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'}}
+        uses: ./.github/actions/maven-cache-delta
+        with:
+          name: nudle-room
+  #---------------------------------------------------------
+  # Build and Upload *.jar from develop branch on Linux
+  #---------------------------------------------------------
+  generate-develop-branch-jar:
+    name: generate-develop-branch-jar
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: >-
+      github.event_name == 'pull_request'
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v7
+        with:
+          ref: 'develop'
+          fetch-depth: 0
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: restore global Maven cache'
+        uses: ./.github/action/maven-cache-restore
+        with:
+          week: ${{needs.setup.outputs.maven_cache_week}}
+          fallback-week: ${{needs.setup.outputs.maven_cache_previous_week}}
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Build application JAR'
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v7
+        with:
+          name: nudle-room-develop-jar
+          path: '${{github.workspace}}/target/*.jar'
+          retention-days: 1
+  #--------------------------------------------------
+  # Configuration for Status checks that are required
+  #--------------------------------------------------
+  status-checks:
+    name: status-checks
+    needs: [tests-linux]
+    permissions:
+      contents: none
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validation Status checks
+        run: |
+          echo 'Configuration for Status checks that are required'
+          echo '${{toJSON(needs)}}'
+          if [[ ('success' == '${{needs.tests-linux.result}}') ]]; then
+            exit 0
+          fi
+          exit 1
