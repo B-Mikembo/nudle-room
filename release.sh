@@ -16,7 +16,7 @@ currentVersion=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStd
 releaseVersion=${currentVersion//-SNAPSHOT/}
 
 checkGit=$(git status --porcelain | wc -l)
-if [[ $checkGit != 0 ]]; then
+if [[ $checkGit -ne 0 ]]; then
     echo "*** check: there are uncommitted changes..."
     echo " "
     show_syntax
