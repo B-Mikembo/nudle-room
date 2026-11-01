@@ -105,9 +105,6 @@ jobs:
         run: |
           chmod +x mvnw
           ./mvnw clean verify
-      - name: 'Artifact: remove unused JARs'
-        run: |
-          rm target/*-javadoc.jar target/*-sources.jar
       - name: 'Artifact: upload JAR'
         uses: actions/upload-artifact@v7
         with:
