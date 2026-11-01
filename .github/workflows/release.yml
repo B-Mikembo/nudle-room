@@ -1,0 +1,84 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  #--------------------------------------------------
+  # Build and Tests the project
+  #--------------------------------------------------
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v7
+      - name: 'Setup: environment'
+        id: setup
+        uses: ./.github/actions/setup
+      - name: 'Init: compute Maven cache week'
+        id: maven-cache-week
+        run: echo "week=$(date -u +%G-W%V)" >> $GITHUB_OUTPUT
+      - name: 'Init: restore global Maven cache'
+        uses: ./.github/actions/maven-cache-restore
+        with:
+          week: ${{ steps.maven-cache-week.outputs.week }}
+      - name: 'Init: install Node.js packages'
+        run: npm ci
+      - name: 'Test: run backend tests'
+        run: |
+          chmod +x mvnw
+          ./mvnw clean verify
+          ARTIFACT_VERSION=$(./mvnw -N help:evaluate -Dexpression=project.version -q -DforceStdout)
+          rm nudle-room/target/*${ARTIFACT_VERSION}.jar
+      - name: 'Artifact: upload JAR'
+        uses: actions/upload-artifact@v7
+        with:
+          name: nudle-room-jar
+          path: '${{ github.workspace }}/nudle-room/target/*.jar'
+          retention-days: 1
+  #--------------------------------------------------
+  # Release
+  #--------------------------------------------------
+  release:
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    name: release
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 'Setup: checkout project'
+        uses: actions/checkout@v7
+      - name: 'Artifact: download JAR'
+        uses: actions/download-artifact@v8
+        with:
+          name: nudle-room-jar
+          path: ./target/
+      - name: 'Release: get variables from artifact'
+        id: artifact_variables
+        run: |
+          ARTIFACT_PATHNAME=$(ls target/*.jar | head -n 1)
+          ARTIFACT_NAME=$(basename $ARTIFACT_PATHNAME)
+          ARTIFACT_VERSION=$(./mvnw -N help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "artifact_asset_name=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
+          echo "artifact_asset_path=${ARTIFACT_PATHNAME}" >> $GITHUB_OUTPUT
+          echo "artifact_version=${ARTIFACT_VERSION}" >> $GITHUB_OUTPUT
+      - name: 'Release: publish release drafter'
+        uses: release-drafter/release-drafter@v7
+        id: release-drafter-final
+        with:
+          publish: true
+          tag: v${{ steps.artifact_variables.outputs.artifact_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Release: upload artifact'
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release-drafter-final.outputs.upload_url }}
+          asset_name: ${{ steps.artifact_variables.outputs.artifact_asset_name }}
+          asset_path: ${{ steps.artifact_variables.outputs.artifact_asset_path}}
+          asset_content_type: application/java-archive
