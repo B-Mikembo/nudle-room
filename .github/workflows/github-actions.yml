@@ -112,7 +112,7 @@ jobs:
           path: '${{github.workspace}}/target/*.jar'
           retention-days: 1
       - name: 'Maven cache: upload downloaded dependencies'
-        if: ${{!cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'}}
+        if: ${{!cancelled() && github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'}}
         uses: ./.github/actions/maven-cache-delta
         with:
           name: nudle-room
