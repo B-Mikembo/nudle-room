@@ -22,7 +22,7 @@ runs:
         {
           echo 'restore-keys<<EOF'
           echo "${prefix}${{inputs.week}}-"
-          if[[ -n "${{inputs.fallback-week }}" ]]; then
+          if [[ -n "${{inputs.fallback-week }}" ]]; then
             echo "${prefix}${{inputs.fallback-week}}-"
           fi
           echo 'EOF'
