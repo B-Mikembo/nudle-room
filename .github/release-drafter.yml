@@ -19,9 +19,11 @@ categories:
     labels:
       - 'area: features request :bulb:'
   - title: 🔧 Enhancements
-    labels: 'area: enhancement :wrench:'
+    labels:
+      - 'area: enhancement :wrench:'
   - title: 🔨 Refactoring
-    labels: 'area: refactoring'
+    labels:
+      - 'area: refactoring'
   - title: 🐞 Bug Fixes
     labels:
       - 'area: bug :bug:'
