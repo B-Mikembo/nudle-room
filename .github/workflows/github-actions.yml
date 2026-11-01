@@ -136,7 +136,7 @@ jobs:
         id: setup
         uses: ./.github/actions/setup
       - name: 'Init: restore global Maven cache'
-        uses: ./.github/action/maven-cache-restore
+        uses: ./.github/actions/maven-cache-restore
         with:
           week: ${{needs.setup.outputs.maven_cache_week}}
           fallback-week: ${{needs.setup.outputs.maven_cache_previous_week}}
