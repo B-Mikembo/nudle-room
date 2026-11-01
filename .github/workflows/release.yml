@@ -31,7 +31,6 @@ jobs:
           chmod +x mvnw
           ./mvnw clean verify
           ARTIFACT_VERSION=$(./mvnw -N help:evaluate -Dexpression=project.version -q -DforceStdout)
-          rm nudle-room/target/*${ARTIFACT_VERSION}*.jar
       - name: 'Artifact: upload JAR'
         uses: actions/upload-artifact@v7
         with:
